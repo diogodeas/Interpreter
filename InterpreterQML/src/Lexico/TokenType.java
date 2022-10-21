@@ -13,6 +13,8 @@ public enum TokenType {
     TEXTO,
     ARRANJO,
     OBJETO,
+    OPEN_dQUOTES,    // "
+    CLOSE_dQUOTES,   // "
     NOME
 
 };

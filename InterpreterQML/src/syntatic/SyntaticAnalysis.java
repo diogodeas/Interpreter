@@ -44,21 +44,7 @@ public class SyntaticAnalysis {
     }
 
     private void showError() {
-        System.out.printf("%02d: ", lex.getLine());
-
-        switch (current.type) {
-            case INVALID_TOKEN:
-                System.out.printf("Lexema inválido [%s]\n", current.token);
-                break;
-            case UNEXPECTED_EOF:
-            case END_OF_FILE:
-                System.out.printf("Fim de arquivo inesperado\n");
-                break;
-            default:
-                System.out.printf("Lexema não esperado [%s]\n", current.token);
-                break;
-        }
-
+        System.out.printf("Não");
         System.exit(1);
     }
 
@@ -68,19 +54,59 @@ public class SyntaticAnalysis {
         while(current.type == TokenType.OPEN_CUR){
             advance();
             if(current.type == TokenType.NOME){
-                
+                advance();
+                if(currente.type == TokenType.OPEN_CUR){
+                    obj(); //duvida se pode chamar o objeto dentro do objeto assim
+                }
+                if(current.type == TokenType.COLON){
+                    eat(TokenType.COLON);
+                    procColon();
+                }
             }
-
+        }
+    }
+    
+    private void procColon() {
+        advance();
+        if(current.type == TokenType.OPEN_BRA){
+            arranjo();
+        } else {
+            valor;
+        }
+    }
+    // <list> ::= '[' [ <l-elem> { ',' <l-elem> } ] ']'
+    private void arranjo() {
+        advance();
+        while(current.type == TokenType.NOME){
+            advance();
+            if(current.type == TokenType.OPEN_CUR){
+                obj();
+            }
+            else(current.type == TokenType.COMMA){
+                advance();
+            }
+        }
+        while(current.type == TokenType.NUMBER){
+            advance();
+        }
+        if(current.type == TokenType.OPEN_dQUOTES){
+            while(current.type == TokenType.NOME){
+                advance();
+            }
         }
 
     }
-    
-    // <list> ::= '[' [ <l-elem> { ',' <l-elem> } ] ']'
-    private void procList() {
-    }
 
     // <l-elem> ::= <l-single> | <l-spread> | <l-if> | <l-for>
-    private void procLElem() {
+    private void valor() {
+        while(current.type == TokenType.NOME || current.type == TokenType.NUMBER){
+            advance();
+        }
+        if(current.type == TokenType.OPEN_dQUOTES){
+            while(current.type == TokenType.NOME){
+                advance();
+            }
+        }
     }
 
     // <l-single> ::= <expr>
