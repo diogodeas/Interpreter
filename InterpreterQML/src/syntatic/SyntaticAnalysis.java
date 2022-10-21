@@ -24,7 +24,7 @@ public class SyntaticAnalysis {
     }
 
     public void start() {
-        obj();
+        code();
     }
 
     private void advance() {
@@ -48,65 +48,61 @@ public class SyntaticAnalysis {
         System.exit(1);
     }
 
-    private void obj(){
+    private void code(){
         eat(TokenType.NOME);
-        eat(TokenType.OPEN_CUR);
-        while(current.type == TokenType.OPEN_CUR){
+        obj();
+    }
+    
+    private void repete(){
+        eat(TokenType.NOME);
+        if(current.type == TokenType.OPEN_BRA) {
+            arranjo();
+        }
+        else if(current.type == TokenType.OPEN_CUR) {
+            obj();
+        }
+        else if(current.type == current.type == TokenType.CLOSE_BRA){
             advance();
-            if(current.type == TokenType.NOME){
-                advance();
-                if(currente.type == TokenType.OPEN_CUR){
-                    obj(); //duvida se pode chamar o objeto dentro do objeto assim
+        }
+        else {
+            showError();
+        }
+    }
+
+    private void obj(){
+        eat(TokenType.OPEN_CUR);
+        while(current.type == TokenType.NOME){
+            advance();
+            if(current.type == TokenType.OPEN_CUR) {
+                inicial();
+            }
+            else if(current.type == TokenType.COLON) {
+                eat(TokenType.OPEN_COLON);
+                if(current.type == TokenType.OPEN_BRA) {
+                    inicial();
+                } else {
+                    valor();
                 }
-                if(current.type == TokenType.COLON){
-                    eat(TokenType.COLON);
-                    procColon();
-                }
+            } else {
+                showError();
             }
         }
     }
     
-    private void procColon() {
-        advance();
-        if(current.type == TokenType.OPEN_BRA){
-            arranjo();
-        } else {
-            valor;
-        }
-    }
     // <list> ::= '[' [ <l-elem> { ',' <l-elem> } ] ']'
     private void arranjo() {
-        advance();
-        while(current.type == TokenType.NOME){
-            advance();
-            if(current.type == TokenType.OPEN_CUR){
-                obj();
-            }
-            else(current.type == TokenType.COMMA){
-                advance();
-            }
+        eat(TokenType.OPEN_BRA);
+        if(current.type == TokenType.NOME) {
+            repete();
+        } else if(current.type == TokenType.TEXTO) {
+            advance ();
         }
-        while(current.type == TokenType.NUMBER){
-            advance();
-        }
-        if(current.type == TokenType.OPEN_dQUOTES){
-            while(current.type == TokenType.NOME){
-                advance();
-            }
-        }
-
     }
 
     // <l-elem> ::= <l-single> | <l-spread> | <l-if> | <l-for>
     private void valor() {
-        while(current.type == TokenType.NOME || current.type == TokenType.NUMBER){
-            advance();
-        }
-        if(current.type == TokenType.OPEN_dQUOTES){
-            while(current.type == TokenType.NOME){
-                advance();
-            }
-        }
+        eat(TokenType.OPEN_CUR);
+        advance();
     }
 
     // <l-single> ::= <expr>
