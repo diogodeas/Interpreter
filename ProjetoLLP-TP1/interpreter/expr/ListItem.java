@@ -10,21 +10,20 @@ import interpreter.util.Utils;
 import interpreter.value.MapValue;
 import interpreter.value.Value;
 
-public class ListItem {
+public abstract class ListItem {
 
         private int line;
 
         protected ListItem(int line) {
-            super(line);
+            this.line = line;
+
         }
 
         public int getLine() {
             return line;
         }
 
-        public List<Value<?>> items() {
-
-        }
+    public abstract List<Value<?>> items();
 
 
 }
