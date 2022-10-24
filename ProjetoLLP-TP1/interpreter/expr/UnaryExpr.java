@@ -67,19 +67,107 @@ public class UnaryExpr extends Expr {
     }
 
     private Value<?> preIncOp() {
-        throw new RuntimeException("Me implemente!");
+        Value<?> v = expr.expr();
+        if (v instanceof NumberValue) {
+            NumberValue pv = (NumberValue) v;
+            var p = pv.value();
+            int res = ++p;
+
+            if(expr instanceof SafeVariable) {
+                ((SafeVariable)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((AccessExpr)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((UnsafeVariable)expr).setValue(new NumberValue(p));
+            }
+
+            NumberValue pres = new NumberValue(res);
+            return pres;
+        }
+        else{
+            Utils.abort(super.getLine());
+            return null;
+        }
     }
 
     private Value<?> posIncOp() {
-        throw new RuntimeException("Me implemente!");
+        Value<?> v = expr.expr();
+        if (v instanceof NumberValue) {
+            NumberValue pv = (NumberValue) v;
+            var p = pv.value();
+            int res = p++;
+
+            if(expr instanceof SafeVariable) {
+                ((SafeVariable)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((AccessExpr)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((UnsafeVariable)expr).setValue(new NumberValue(p));
+            }
+
+            NumberValue pres = new NumberValue(res);
+            return pres;
+        }
+        else{
+            Utils.abort(super.getLine());
+            return null;
+        }
     }
 
     private Value<?> preDecOp() {
-        throw new RuntimeException("Me implemente!");
+        Value<?> v = expr.expr();
+        if (v instanceof NumberValue) {
+            NumberValue pv = (NumberValue) v;
+            var p = pv.value();
+            int res = --p;
+
+            if(expr instanceof SafeVariable) {
+                ((SafeVariable)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((AccessExpr)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((UnsafeVariable)expr).setValue(new NumberValue(p));
+            }
+
+            NumberValue pres = new NumberValue(res);
+            return pres;
+        }
+        else{
+            Utils.abort(super.getLine());
+            return null;
+        }
     }
 
     private Value<?> posDecOp() {
-        throw new RuntimeException("Me implemente!");
+        Value<?> v = expr.expr();
+        if (v instanceof NumberValue) {
+            NumberValue pv = (NumberValue) v;
+            var p = pv.value();
+            int res = p--;
+
+            if(expr instanceof SafeVariable) {
+                ((SafeVariable)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((AccessExpr)expr).setValue(new NumberValue(p));
+            }
+            else if(expr instanceof SafeVariable) {
+                ((UnsafeVariable)expr).setValue(new NumberValue(p));
+            }
+
+            NumberValue pres = new NumberValue(res);
+            return pres;
+        }
+        else{
+            Utils.abort(super.getLine());
+            return null;
+        }
     }
 
 }

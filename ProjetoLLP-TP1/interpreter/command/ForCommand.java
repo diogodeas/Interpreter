@@ -3,18 +3,18 @@ package interpreter.command;
 import interpreter.expr.Expr;
 import interpreter.expr.Variable;
 import interpreter.util.Utils;
-import interpreter.value.BoolValue;
+import interpreter.value.ListValue;
 import interpreter.value.Value;
 
-public class ForCommand extends  Command{
-    private Variable variable;
+public class ForCommand extends Command {
+    private Variable var;
     private Expr expr;
     private Command cmds;
 
 
-
-    public ForCommand(int var, Expr expr, Command cmds){
-        super(var);
+    public ForCommand(int line, Variable var, Expr expr, Command cmds) {
+        super(line);
+        this.var = var;
         this.expr = expr;
         this.cmds = cmds;
 
@@ -23,19 +23,16 @@ public class ForCommand extends  Command{
     @Override
     public void execute() {
 
-        while (true) {
-            Value<?> v = expr.expr();
-            if (!(v instanceof BoolValue))
-                Utils.abort(super.getLine());
+        Value<?> v = expr.expr();
+        if (!(v instanceof ListValue))
+            Utils.abort(super.getLine());
 
-            BoolValue bv = (BoolValue) v;
-            boolean b = bv.value();
+        ListValue fv = (ListValue) v;
 
-            if (!b || !variable.isConstant()){ //se a expressao for falsa ou a variável inválida.
-                break;
-            }
-
+        for (Value<?> variable : fv.value()) {
+            var.setValue(variable);
             cmds.execute();
         }
     }
 }
+

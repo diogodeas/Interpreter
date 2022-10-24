@@ -12,7 +12,7 @@ public class AssertCommand extends Command{
     public AssertCommand(int line, Expr expr, Expr msg){
         super(line);
         this.expr = expr;
-        this.msg = null;
+        this.msg = msg;
     }
     public void execute() {
         Value<?> v = expr.expr();

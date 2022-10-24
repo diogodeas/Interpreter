@@ -36,7 +36,7 @@ public class SyntaticAnalysis {
     }
 
     private void advance() {
-        // System.out.println("Advanced (\"" + current.token + "\", " +
+        //System.out.println("Advanced (\"" + current.token + "\", " +
         //     current.type + ")");
         current = lex.nextToken();
     }
@@ -224,9 +224,7 @@ public class SyntaticAnalysis {
     private PrintCommand procPrint() {
         eat(TokenType.PRINT);
         int line = lex.getLine();
-
         eat(TokenType.OPEN_PAR);
-
         Expr expr = null;
         if (current.type == TokenType.NOT ||
                 current.type == TokenType.SUB ||
@@ -280,16 +278,18 @@ public class SyntaticAnalysis {
     }
 
     // <if> ::= if '(' <expr> ')' <body> [ else <body> ]
-    private void procIf() {
+    private IfCommand procIf() {
         eat(TokenType.IF);
         eat(TokenType.OPEN_PAR);
-        procExpr();
+        Expr expr = procExpr();
         eat(TokenType.CLOSE_PAR);
-        procBody();
+        Command thenCmd = procBody();
+        Command elseCmd = null;
         if (current.type == TokenType.ELSE) {
             eat(TokenType.ELSE);
-            procBody();
+            elseCmd = procBody();
         }
+        return new IfCommand(lex.getLine(), expr, thenCmd, elseCmd);
     }
 
     // <while> ::= while '(' <expr> ')' <body>
@@ -307,25 +307,29 @@ public class SyntaticAnalysis {
     }
 
     // <dowhile> ::= do <body> while '(' <expr> ')' ';'
-    private void procDoWhile() {
+    private DoWhileCommand procDoWhile() {
         eat(TokenType.DO);
-        procBody();
+        Command cmd = procBody();
         eat(TokenType.WHILE);
         eat(TokenType.OPEN_PAR);
-        procExpr();
+        Expr expr = procExpr();
         eat(TokenType.CLOSE_PAR);
         eat(TokenType.SEMICOLON);
+
+        return new DoWhileCommand(lex.getLine(), cmd, expr);
     }
 
     // <for> ::= for '(' <name> in <expr> ')' <body>
-    private void procFor() {
+    private ForCommand procFor() {
         eat(TokenType.FOR);
         eat(TokenType.OPEN_PAR);
-        procName();
+        Variable var = procName();
         eat(TokenType.IN);
-        procExpr();
+        Expr expr = procExpr();
         eat(TokenType.CLOSE_PAR);
-        procBody();
+        Command cmds  = procBody();
+
+        return new ForCommand(lex.getLine(), var, expr, cmds);
     }
 
     // <body> ::= <cmd> | '{' <code> '}'
@@ -366,30 +370,42 @@ public class SyntaticAnalysis {
 
     // <expr> ::= <cond> [ '??' <cond> ]
     private Expr procExpr() {
-        Expr expr = procCond();
-        if (current.type == TokenType.IF_NULL) {
-            advance();
-            procCond();
-        }
 
-        return expr;
+        Expr leftExpr = procCond();
+        BinaryOp operation = null;
+        Expr rightExpr = null;
+        if (current.type == TokenType.IF_NULL) {
+            operation = BinaryOp.IF_NULL;
+            advance();
+            rightExpr = procCond();
+        }
+        if(operation != null){
+            return new BinaryExpr(lex.getLine(), leftExpr, operation, rightExpr);
+        }
+        return leftExpr;
+
     }
 
     // <cond> ::= <rel> { ( '&&' | '||' ) <rel> }
     private Expr procCond() {
-        Expr expr = procRel();
+        Expr leftExpr = procRel();
+        BinaryOp operation = null;
         while (current.type == TokenType.AND ||
                 current.type == TokenType.OR) {
+            
             if (current.type == TokenType.AND) {
+                operation = BinaryOp.AND;
                 advance();
             } else {
+                operation = BinaryOp.OR;
                 advance();
             }
 
-            procRel();
+            Expr rightExpr = procRel();
+            return new BinaryExpr(lex.getLine(), leftExpr, operation, rightExpr);
         }
 
-        return expr;
+        return leftExpr;
     }
 
     // <rel> ::= <arith> [ ( '<' | '>' | '<=' | '>=' | '==' | '!=' ) <arith> ]
@@ -429,13 +445,13 @@ public class SyntaticAnalysis {
                     advance();
                     break;
             }
+            if(op != null){
+                int line = lex.getLine();
+                Expr right = procArith();
 
-            int line = lex.getLine();
-            Expr right = procArith();
-
-            left = new BinaryExpr(line, left, op, right);
+                left = new BinaryExpr(line, left, op, right);
+            }
         }
-
         return left;
     }
 
@@ -531,9 +547,11 @@ public class SyntaticAnalysis {
     // <factor> ::= ( '(' <expr> ')' | <rvalue> ) [ '++' | '--' ]
     private Expr procFactor() {
         Expr expr = null;
+        UnaryOp operation = null;
+        UnaryExpr unaryExpr = null;
         if (current.type == TokenType.OPEN_PAR) {
             advance();
-            procExpr();
+            expr = procExpr();
             eat(TokenType.CLOSE_PAR);
         } else {
             expr = procRValue();
@@ -542,13 +560,20 @@ public class SyntaticAnalysis {
         if (current.type == TokenType.INC ||
                 current.type == TokenType.DEC) {
             if (current.type == TokenType.INC) {
+                operation = UnaryOp.POS_INC;
                 advance();
             } else {
+                operation = UnaryOp.POS_DEC;
                 advance();
             }
         }
+        if (operation != null) {
+            unaryExpr = new UnaryExpr(lex.getLine(), expr, operation);
+            return unaryExpr;
+        }
 
         return expr;
+        
     }
 
     // <rvalue> ::= <const> | <function> | <lvalue> | <list> | <map>
@@ -576,7 +601,7 @@ public class SyntaticAnalysis {
                 expr = procLValue();
                 break;
             case OPEN_BRA:
-                procList();
+                expr = procList();
                 break;
             case OPEN_CUR:
                 expr = procMap();
@@ -702,6 +727,7 @@ public class SyntaticAnalysis {
                 list.addItem(procLElem());
             }
         }
+        eat(TokenType.CLOSE_BRA);
         return list;
     }
 
@@ -794,12 +820,10 @@ public class SyntaticAnalysis {
         Variable var = procName();
         eat(TokenType.IN);
         Expr expr = procExpr();
+        eat(TokenType.CLOSE_PAR);
         ListItem item = procLElem();
-
-        ForListItem flt = new ForListItem(line, var, expr, item);
-        return flt;
-
-
+       
+        return  new ForListItem(line, var, expr, item);
 
     }
 

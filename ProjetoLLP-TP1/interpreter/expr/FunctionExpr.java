@@ -1,14 +1,10 @@
 
 package interpreter.expr;
 
-import java.util.Scanner;
+import java.util.*;
 
 import interpreter.util.Utils;
-import interpreter.value.BoolValue;
-import interpreter.value.ListValue;
-import interpreter.value.NumberValue;
-import interpreter.value.TextValue;
-import interpreter.value.Value;
+import interpreter.value.*;
 
 public class FunctionExpr extends Expr {
 
@@ -53,29 +49,93 @@ public class FunctionExpr extends Expr {
 
     private TextValue readOp(Value<?> v) {
         System.out.print(v);
-
         String text = input.nextLine().trim();
         return text.isEmpty() ? null : new TextValue(text);
     }
 
     private NumberValue randomOp(Value<?> v) {
-        return null;
+        int altr;
+        Random random = new Random();
+        NumberValue rv = (NumberValue) v;
+        altr = random.nextInt(rv.value());
+        return (new NumberValue(altr));
     }
 
     private NumberValue lengthOp(Value<?> v) {
-        return null;
+        int lev;
+        if(v instanceof ListValue) {
+            var tam = (ListValue) v.value();
+            lev = tam.value().size();
+            return new NumberValue(lev);
+        } else {
+            return null;
+        }
     }
 
     private ListValue keysOp(Value<?> v) {
-        return null;
+        if(v instanceof MapValue) {
+            var kv = (MapValue) v.value();
+            var keys = kv.value().keySet().stream().toList();
+            return new ListValue(keys);
+        } else {
+            return null;
+        }
     }
 
     private ListValue valuesOp(Value<?> v) {
-        return null;
+        if(v instanceof MapValue) {
+            var vop = (MapValue) v.value();
+            var vops = vop.value().values().stream().toList();
+            return new ListValue(vops);
+        } else {
+            return null;
+        }
     }
 
     private BoolValue toBoolOp(Value<?> v) {
-        return null;
+        boolean boolValue;
+        if (v == null) {
+            boolValue = false;
+        } else if (v instanceof BoolValue) {
+            BoolValue bv = (BoolValue) v;
+            boolean b1 = bv.value();
+
+            boolValue = b1;
+        } else if (v instanceof NumberValue) {
+            NumberValue nv = (NumberValue) v;
+            int n = nv.value();
+            if(n!=0)
+                boolValue = true;
+            else
+                boolValue = false;
+        } else if (v instanceof ListValue) {
+            ListValue lv = (ListValue) v;
+            List<Value<?>> l = new ArrayList<Value<?>>(lv.value());
+            List<Value<?>> aux = new ArrayList<Value<?>>();
+            if(l.equals(aux)) {
+                boolValue = false;
+            }
+            else{
+                boolValue = true;
+            }
+
+
+        }else if (v instanceof MapValue) {
+            MapValue mv = (MapValue) v;
+            Map<Value<?>, Value<?>> map = new HashMap<Value<?>, Value<?>>(mv.value());
+            Map<Value<?>, Value<?>> aux = new HashMap<Value<?>, Value<?>>();
+            if(map.equals(aux)){
+                boolValue = false;
+            }
+
+            else{
+                boolValue = true;
+            }
+        }else {
+            boolValue = false;
+        }
+
+        return new BoolValue(boolValue);
     }
 
     private NumberValue toIntOp(Value<?> v) {
@@ -107,7 +167,38 @@ public class FunctionExpr extends Expr {
     }
 
     private TextValue toStrOp(Value<?> v) {
-        return null;
+        String textValue = "null";
+        if (v instanceof BoolValue) {
+            BoolValue bv = (BoolValue) v;
+            boolean b = bv.value();
+
+            if(b){
+                textValue = "true";
+            }
+
+            else{
+                textValue = "false";
+            }
+
+        } else if (v == null) {
+            textValue = "null";
+        } else if (v instanceof NumberValue) {
+            NumberValue nv = (NumberValue) v;
+            int n = nv.value();
+            textValue = String.valueOf(n);
+        } else if (v instanceof TextValue) {
+            TextValue sv = (TextValue) v;
+            textValue = sv.value();
+        } else if (v instanceof ListValue) {
+            ListValue lv = (ListValue) v;
+            textValue = lv.toString();
+        } else if (v instanceof MapValue) {
+            MapValue mv = (MapValue) v;
+            textValue = mv.toString();
+        }
+
+        return new TextValue(textValue);
+
     }
 
 }

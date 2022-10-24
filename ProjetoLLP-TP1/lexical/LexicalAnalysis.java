@@ -48,7 +48,7 @@ public class LexicalAnalysis implements AutoCloseable {
                     } else if (c == '\n') {
                         this.line++;
                     } else if (c == '/') {
-                        lex.token += (char) c;
+                        //lex.token += (char) c;
                         state = 2;
                     } else if (c == '=' || c == '!' || c == '<' || c == '>') {
                         lex.token += (char) c;
@@ -96,11 +96,11 @@ public class LexicalAnalysis implements AutoCloseable {
                     break;
                 case 2:
                     if(c == '/'){
-                        lex.token += '/';
                         state = 3;
                     }
                     else{
                         ungetc(c);
+                        lex.token += '/';
                         state = 15;
                     }
                     break;

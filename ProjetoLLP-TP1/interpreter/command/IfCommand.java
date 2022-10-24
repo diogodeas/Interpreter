@@ -37,9 +37,10 @@ public class IfCommand extends  Command{
             thenCmds.execute();
         }
         else{
-            elseCmds.execute();
+            if(elseCmds != null){
+                elseCmds.execute();
+            }
         }
-
     }
 }
 
