@@ -10,32 +10,26 @@ import interpreter.value.ListValue;
 import interpreter.value.MapValue;
 import interpreter.value.Value;
 
-public class ListExpr {
+public class ListExpr extends Expr{
 
     private List<ListItem> list;
 
     public ListExpr(int line) {
         super(line);
-        list = List<ListItem>();
+        this.list = new ArrayList<ListItem>();
     }
 
     public void addItem(ListItem item) {
         list.add(item);
     }
     public Value<?> expr() {
-        List<Value<?>, Value<?>> l = new HashList<Value<?>, Value<?>>();
+        List<Value<?>> listExpr = new ArrayList<Value<?>>();
 
-        for (ListItem item : list) {
-            Value<?> key = item.key.expr();
-            if (key == null)
-                Utils.abort(super.getLine());
-
-            Value<?> value = item.value.expr();
-
-            l.put(key, value);
+        for(ListItem item : list){
+            listExpr.addAll(item.items());
         }
+        ListValue lv = new ListValue(listExpr);
 
-        ListValue mv = new ListValue(l);
-        return mv;
+        return lv;
     }
 }
