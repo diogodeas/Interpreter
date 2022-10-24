@@ -7,7 +7,7 @@ import java.util.Map;
 import interpreter.util.Utils;
 import interpreter.value.MapValue;
 import interpreter.value.Value;
-public class SingleListItem {
+public class SingleListItem extends ListItem{
 
     private Expr expr;
 
@@ -16,6 +16,9 @@ public class SingleListItem {
         this.expr = expr;
     }
     public List<Value<?>> items() {
+        List<Value<?>> singleList = new ArrayList<>();
+        singleList.add(expr.expr());
 
+        return singleList;
     }
 }
