@@ -776,11 +776,12 @@ public class SyntaticAnalysis {
         eat(TokenType.OPEN_PAR);
         Expr expr = procExpr();
         ListItem thenItem = procLElem();
-        if(current.type == TokenType.ELSE){
+        ListItem elseItem = null;
+        if (current.type == TokenType.ELSE) {
             eat(TokenType.ELSE);
-            ListItem elseItem = procLElem();
+            elseItem = procLElem();
         }
-        //TODO: Verificar erro abaixo
+   
         return new IfListItem(lex.getLine(), expr, thenItem, elseItem);
 
     }
