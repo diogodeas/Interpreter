@@ -1,8 +1,11 @@
-package Lexico;
+package lexico;
 
 public enum TokenType {
-    END_OF_FILE,
+    // SPECIALS
+    UNEXPECTED_EOF,
     INVALID_TOKEN,
+    END_OF_FILE,
+
     COMMA,         // ,
     OPEN_CUR,      // {
     CLOSE_CUR,     // }
@@ -13,8 +16,6 @@ public enum TokenType {
     TEXTO,
     ARRANJO,
     OBJETO,
-    OPEN_dQUOTES,    // "
-    CLOSE_dQUOTES,   // "
     NOME
 
 };

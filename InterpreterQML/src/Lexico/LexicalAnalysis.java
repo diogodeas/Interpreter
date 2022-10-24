@@ -1,8 +1,8 @@
-package Lexico;
+package lexico;
 
 import java.io.FileInputStream;
 import java.io.PushbackInputStream;
-
+import lexico.LexicalException;
 import javax.lang.model.util.ElementScanner14;
 
 public class LexicalAnalysis implements AutoCloseable {
@@ -35,13 +35,13 @@ public class LexicalAnalysis implements AutoCloseable {
     }
 
     public Lexeme nextToken() {
+
         Lexeme lex = new Lexeme("", TokenType.END_OF_FILE);
 
         int state = 1;
-        while (state != 6 && state != 4) {
+        while (state != 6 && state != 5) {
             int c = getc();
-            // System.out.printf("  [%02d, %03d ('%c')]\n",
-            //     state, c, (char) c);
+            //System.out.printf("  [%02d, %03d ('%c')]\n", state, c, (char) c);
             switch (state) {
                 case 1:
                     if (c == ' ' || c == '\t' || c == '\r') {
@@ -51,6 +51,7 @@ public class LexicalAnalysis implements AutoCloseable {
                     }
                     else if( c == '{' ||  c == '}' ||  c == ':' ||  c == '[' ||  c == ']' ||
                     c == ',' ){
+                        lex.token +=(char)c;
                         state = 6;
                     }
                     else if( c == '"'){
@@ -62,17 +63,18 @@ public class LexicalAnalysis implements AutoCloseable {
                     } else if (Character.isDigit(c)) {
                         lex.token += (char) c;
                         state = 3;
+                    }
                     else if (c == -1) {
                         lex.type = TokenType.END_OF_FILE;
-                        state = 16;
+                        state = 5;
                     } else {
                         lex.token += (char) c;
                         lex.type = TokenType.INVALID_TOKEN;
-                        state = 16;
+                        state = 5;
                     }
                     break;
                 case 2:
-                    if(c!='"'){
+                    if(c != '"'){
                         lex.token +=(char)c;
                         state= 2;
                     }
@@ -86,10 +88,10 @@ public class LexicalAnalysis implements AutoCloseable {
                         lex.token += (char) c;
                         state = 3;
                     }
-                    else{ //verificar
-                        ungetc(c);
+                    else{
                         lex.type = TokenType.NUMBER;
                         state=5;
+                        ungetc(c);
                     }
                     break;
                 case 4:
@@ -102,27 +104,6 @@ public class LexicalAnalysis implements AutoCloseable {
                         lex.type = TokenType.NOME;
                         state = 6;
                     }
-
-                    break;
-                case 5: //verificar
-                    if (c == '+') {
-                        lex.token += (char) c;
-                        state = 15;
-                    } else {
-                       ungetc(c);
-                       state = 15; 
-                    }
-
-                    break;
-                case 6: //verificar
-                    if(c== '-'){
-                        lex.token += (char) c;
-                        state=15;
-                    }
-                    else{
-                        ungetc(c);
-                        state = 15;
-                    }
                     break;
               
                 default:
@@ -130,9 +111,8 @@ public class LexicalAnalysis implements AutoCloseable {
             }
         }
 
-        if (state == 15)
+        if (state == 6)
             lex.type = st.find(lex.token);
-
         return lex;
     }
 
@@ -143,6 +123,7 @@ public class LexicalAnalysis implements AutoCloseable {
             throw new LexicalException("Unable to read file");
         }
     }
+    
 
     private void ungetc(int c) {
         if (c != -1) {

@@ -1,4 +1,5 @@
-package Lexico;
+
+package lexico;
 
 public class Lexeme {
 

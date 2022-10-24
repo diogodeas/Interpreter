@@ -1,6 +1,6 @@
-package Lexico;
+package lexico;
 
-import Lexico.TokenType;
+import lexico.TokenType;
 
 import java.util.HashMap;
 import java.util.Map;
