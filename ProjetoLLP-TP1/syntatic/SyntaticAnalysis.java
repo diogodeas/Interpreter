@@ -6,26 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import interpreter.command.AssignCommand;
-import interpreter.command.BlocksCommand;
-import interpreter.command.Command;
-import interpreter.command.PrintCommand;
-import interpreter.command.WhileCommand;
-import interpreter.expr.AccessExpr;
-import interpreter.expr.BinaryExpr;
-import interpreter.expr.BinaryOp;
-import interpreter.expr.ConstExpr;
-import interpreter.expr.Expr;
-import interpreter.expr.FunctionExpr;
-import interpreter.expr.FunctionOp;
-import interpreter.expr.MapExpr;
-import interpreter.expr.MapItem;
-import interpreter.expr.SafeVariable;
-import interpreter.expr.SetExpr;
-import interpreter.expr.UnaryExpr;
-import interpreter.expr.UnaryOp;
-import interpreter.expr.UnsafeVariable;
-import interpreter.expr.Variable;
+import interpreter.command.*;
+import interpreter.expr.*;
 import interpreter.util.Utils;
 import interpreter.value.BoolValue;
 import interpreter.value.NumberValue;
@@ -44,7 +26,7 @@ public class SyntaticAnalysis {
     public SyntaticAnalysis(LexicalAnalysis lex) {
         this.lex = lex;
         this.current = lex.nextToken();
-        memory = new HashMap<String,Variable>();
+        this.memory = new HashMap<String,Variable>();
     }
 
     public Command start() {
@@ -277,7 +259,24 @@ public class SyntaticAnalysis {
     }
 
     // <assert> ::= assert '(' <expr> [ ',' <expr> ] ')' ';'
-    private void procAssert() {
+    private AssertCommand procAssert() {
+        AssertCommand assertCMDS;
+        Expr expr;
+        Expr msg = null;
+        eat(TokenType.ASSERT);
+        int line = lex.getLine();
+        eat(TokenType.OPEN_PAR);
+        expr  = procExpr();
+        if(current.type == TokenType.COMMA){
+            eat(TokenType.COMMA);
+            msg = procExpr();
+        }
+
+        eat(TokenType.CLOSE_PAR);
+        eat(TokenType.SEMICOLON);
+        assertCMDS = new AssertCommand(line,expr, msg);
+
+        return assertCMDS;
     }
 
     // <if> ::= if '(' <expr> ')' <body> [ else <body> ]
@@ -288,7 +287,7 @@ public class SyntaticAnalysis {
         eat(TokenType.CLOSE_PAR);
         procBody();
         if (current.type == TokenType.ELSE) {
-            advance();
+            eat(TokenType.ELSE);
             procBody();
         }
     }
@@ -331,7 +330,7 @@ public class SyntaticAnalysis {
 
     // <body> ::= <cmd> | '{' <code> '}'
     private Command procBody() {
-        Command cmds = null;
+        Command cmds;
         if (current.type == TokenType.OPEN_CUR) {
             advance();
             cmds = procCode();
@@ -467,7 +466,26 @@ public class SyntaticAnalysis {
     // <term> ::= <prefix> { ( '*' | '/' | '%' ) <prefix> }
     private Expr procTerm() {
         Expr expr = procPrefix();
-        // TODO: Me completar!
+        BinaryOp op = null;
+        while(current.type == TokenType.MUL || current.type == TokenType.DIV
+        || current.type ==  TokenType.MOD){
+            if (current.type == TokenType.MUL) {
+                op = BinaryOp.MUL;
+                advance();
+            } else if(current.type ==  TokenType.DIV) {
+                op = BinaryOp.DIV;
+                advance();
+            }
+            else{
+                op = BinaryOp.MOD;
+                advance();
+            }
+            int line = lex.getLine();
+
+            Expr right = procPrefix();
+
+            expr = new BinaryExpr(line, expr, op, right);
+        }
 
         return expr;
     }
@@ -671,27 +689,117 @@ public class SyntaticAnalysis {
     }
 
     // <list> ::= '[' [ <l-elem> { ',' <l-elem> } ] ']'
-    private void procList() {
+    private ListExpr procList() {
+        eat(TokenType.OPEN_BRA);
+        int line = lex.getLine();
+        ListExpr list = new ListExpr(line);
+
+        if(current.type != TokenType.CLOSE_BRA){
+            ListItem item = procLElem();
+            list.addItem(item);
+            while(current.type == TokenType.COMMA){
+                advance();
+                list.addItem(procLElem());
+            }
+        }
+        return list;
     }
 
     // <l-elem> ::= <l-single> | <l-spread> | <l-if> | <l-for>
-    private void procLElem() {
+    private ListItem procLElem() {
+        ListItem li = null;
+        switch (current.type) {
+            case NOT:
+            case SUB:
+            case INC:
+            case DEC:
+            case OPEN_PAR:
+            case NULL:
+            case FALSE:
+            case TRUE:
+            case NUMBER:
+            case TEXT:
+            case READ:
+            case RANDOM:
+            case LENGTH:
+            case KEYS:
+            case VALUES:
+            case TOBOOL:
+            case TOINT:
+            case TOSTR:
+            case NAME:
+            case OPEN_BRA:
+            case OPEN_CUR:
+                li = procLSingle();
+                break;
+
+            case SPREAD:
+                li = procLSpread();
+                break;
+
+            case IF:
+                li = procLIf();
+                break;
+
+            case FOR:
+                li = procLFor();
+                break;
+
+            default:
+                showError();
+                break;
+        }
+        return li;
     }
 
     // <l-single> ::= <expr>
-    private void procLSingle() {
+    private SingleListItem procLSingle() {
+        int line  = lex.getLine();
+        Expr expr = procExpr();
+
+        return new SingleListItem(line, expr);
+
     }
 
     // <l-spread> ::= '...' <expr>
-    private void procLSpread() {
+    private SpreadListItem procLSpread() {
+        eat(TokenType.SPREAD);
+        Expr expr = procExpr();
+
+
+        return new SpreadListItem(lex.getLine(), expr);
     }
 
     // <l-if> ::= if '(' <expr> ')' <l-elem> [ else <l-elem> ]
-    private void procLIf() {
+    private IfListItem procLIf() {
+        eat(TokenType.IF);
+        eat(TokenType.OPEN_PAR);
+        Expr expr = procExpr();
+        ListItem thenItem = procLElem();
+        if(current.type == TokenType.ELSE){
+            eat(TokenType.ELSE);
+            ListItem elseItem = procLElem();
+        }
+        //TODO: Verificar erro abaixo
+        return new IfListItem(lex.getLine(), expr, thenItem, elseItem);
+
     }
 
     // <l-for> ::= for '(' <name> in <expr> ')' <l-elem>
-    private void procLFor() {
+    private ForListItem procLFor() {
+        int line = lex.getLine();
+        eat(TokenType.FOR);
+        eat(TokenType.OPEN_PAR);
+        Variable var = procName();
+        eat(TokenType.IN);
+        Expr expr = procExpr();
+        ListItem item = procLElem();
+
+        ForListItem flt = new ForListItem(line, var, expr, item);
+        return flt;
+
+
+
     }
 
     // <map> ::= '{' [ <m-elem> { ',' <m-elem> } ] '}'
